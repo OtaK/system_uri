@@ -93,7 +93,3 @@ pub use crate::windows::{install, open};
 mod macos;
 #[cfg(target_os = "macos")]
 pub use crate::macos::{install, open};
-
-/// Foreign Function call Interface to use this library
-#[cfg(feature = "ffi")]
-pub mod ffi;

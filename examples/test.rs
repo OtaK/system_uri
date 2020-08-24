@@ -7,11 +7,6 @@
 // specific language governing permissions and limitations relating to use of the SAFE Network
 // Software.
 
-extern crate rand;
-extern crate system_uri;
-#[macro_use]
-extern crate unwrap;
-
 use rand::Rng;
 use std::env;
 use std::process::exit;
@@ -21,7 +16,7 @@ use system_uri::{install, open, App, SystemUriError};
 
 fn install_and_open() -> Result<(), SystemUriError> {
     let mut rng = rand::thread_rng();
-    let exec = String::from(unwrap!(unwrap!(std::env::current_exe()).to_str()));
+    let exec = String::from(std::env::current_exe().unwrap().to_str().unwrap());
     let app = App::new(
         "net.maidsafe.example".to_string(),
         "MaidSafe Ltd.".to_string(),
