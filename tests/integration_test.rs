@@ -7,11 +7,8 @@
 // specific language governing permissions and limitations relating to use of the SAFE Network
 // Software.
 
-extern crate ffi_utils;
 extern crate rand;
 extern crate system_uri;
-#[macro_use]
-extern crate unwrap;
 
 use rand::Rng;
 #[cfg(target_os = "linux")]
@@ -66,7 +63,7 @@ fn check(_: &str, _: &str, _: &str) {
 
 #[cfg(target_os = "windows")]
 fn check(scheme: &str, _: &str, _: &str) {
-    unwrap!(open(format!("{}:test", scheme)));
+    open(format!("{}:test", scheme)).unwrap();
 }
 
 fn gen_rand_schema() -> String {
@@ -79,7 +76,7 @@ fn install_and_check() {
     let vendor = String::from("MaidSafe");
     let app_name = String::from("Example1");
     let schema = gen_rand_schema();
-    let exec = String::from(unwrap!(unwrap!(std::env::current_exe()).to_str()));
+    let exec = String::from(std::env::current_exe().unwrap().to_str().unwrap());
     println!("{:} for {}", exec, schema);
     let app = App::new(
         "net.maidsafe.example".to_string(),
@@ -98,7 +95,7 @@ fn exec_multiple_args() {
     let vendor = String::from("MaidSafe");
     let app_name = String::from("Example2");
     let schema = gen_rand_schema();
-    let mut exec = String::from(unwrap!(unwrap!(std::env::current_exe()).to_str()));
+    let mut exec = String::from(std::env::current_exe().unwrap().to_str().unwrap());
     exec.push_str(" arg1 arg2");
     println!("{:} for {}", exec, schema);
     let app = App::new(
@@ -111,48 +108,4 @@ fn exec_multiple_args() {
 
     assert!(install(&app, &[schema.clone()]).is_ok());
     check(&schema, &vendor, &app_name);
-}
-
-#[test]
-fn ffi_install_and_check() {
-    use ffi_utils::test_utils::call_0;
-    use std::ffi::CString;
-    use std::os::raw::c_char;
-    use system_uri::ffi::install as ffi_install;
-
-    let exec = unwrap!(unwrap!(std::env::current_exe()).to_str()).to_owned();
-    // let's copy the executable to a path
-    // with a white space to test it's supported
-    let exec_with_white_space = format!("{} after_white_space", exec);
-    assert!(unwrap!(std::fs::copy(exec.clone(), exec_with_white_space.clone())) > 0);
-
-    let schema = gen_rand_schema();
-    let schema_cstr = unwrap!(CString::new(schema.clone()));
-    println!("{:} for {}", exec_with_white_space, schema);
-    let vendor = "MaidSafe";
-    let app_name = "Example3";
-    let bundle_str = unwrap!(CString::new("net.maidsafe.example"));
-    let vendor_str = unwrap!(CString::new(vendor));
-    let app_name_str = unwrap!(CString::new(app_name));
-    let icon = unwrap!(CString::new(""));
-    let mut args_vec: Vec<*const c_char> = vec![];
-    let arg1 = unwrap!(CString::new(exec_with_white_space));
-    let arg2 = unwrap!(CString::new("arg2"));
-    args_vec.push(arg1.as_ptr());
-    args_vec.push(arg2.as_ptr());
-
-    unsafe {
-        unwrap!(call_0(|user_data, callback| ffi_install(
-            bundle_str.as_ptr(),
-            vendor_str.as_ptr(),
-            app_name_str.as_ptr(),
-            args_vec.as_ptr() as *const *const c_char,
-            args_vec.len(),
-            icon.as_ptr(),
-            schema_cstr.as_ptr(),
-            user_data,
-            callback,
-        )))
-    };
-    check(&schema, vendor, app_name);
 }

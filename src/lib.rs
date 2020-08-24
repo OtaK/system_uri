@@ -23,7 +23,7 @@
 // https://github.
 // com/feross/webtorrent-desktop/blob/4bb2056bc9c1a421815b97d03ffed512575dfde0/src/main/handlers.js
 #![forbid(
-    exceeding_bitshifts,
+    arithmetic_overflow,
     mutable_transmutes,
     no_mangle_const_items,
     unknown_crate_types,
@@ -36,7 +36,6 @@
     missing_docs,
     non_shorthand_field_patterns,
     overflowing_literals,
-    plugin_as_library,
     stable_features,
     unconditional_recursion,
     unknown_lints,
@@ -74,61 +73,11 @@
     allow(use_debug, too_many_arguments, needless_return)
 )]
 
-#[macro_use]
-extern crate quick_error;
-
 mod app;
 pub use crate::app::App;
 
-mod errors {
-    use ffi_utils::StringError;
-    use std::io;
-    use std::str::Utf8Error;
-
-    quick_error! {
-        /// System URI error variants.
-        #[derive(Debug)]
-        pub enum Error {
-            /// IO error.
-            IoError(error: io::Error) {
-                description("Io error")
-                display("I/O error: {}", error)
-                from()
-            }
-            /// String error.
-            StringError(error: StringError) {
-                description("String error")
-                display("String error: {:?}", error)
-                from()
-            }
-            /// Utf-8 error.
-            Utf8Error(error: Utf8Error) {
-                description(error.description())
-                display("Utf-8 error: {}", error)
-                from()
-            }
-            #[cfg(target_os = "linux")]
-            /// XDG error.
-            XdgOpenError(uri: String, stdout: String) {
-                description(uri)
-                display("Executing `xdg-open {}` failed: {}", uri, stdout)
-            }
-            #[cfg(target_os = "windows")]
-            /// Open error.
-            ShellOpenError(code: i32) {
-                display("Using ShellExecuteW to open URL failed with code {}", code)
-            }
-            /// Unexpected error.
-            Unexpected(s: &'static str) {
-                description(s)
-                display("Unexpected error: {}", s)
-                from()
-            }
-        }
-    }
-}
-
-pub use crate::errors::Error as SystemUriError;
+mod error;
+pub use crate::error::Error as SystemUriError;
 
 #[cfg(target_os = "linux")]
 mod linux;

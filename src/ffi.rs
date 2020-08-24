@@ -12,12 +12,17 @@
 use super::errors::Error;
 use super::{install as rust_install, open as rust_open, App};
 use ffi_utils::{
-    catch_unwind_cb, from_c_str, vec_clone_from_raw_parts, ErrorCode, FfiResult, FFI_RESULT_OK,
+    catch_unwind_cb, vec_clone_from_raw_parts, ErrorCode, FfiResult, FFI_RESULT_OK,
 };
 
 use libc::c_char;
 use std::ffi::CStr;
 use std::os::raw::c_void;
+
+fn from_c_str(ptr: *const c_char) -> Result<String, Error> {
+    let c_str: std::ffi::CString = unsafe { std::ffi::CStr::from_ptr(ptr) }.into();
+    Ok(c_str.into_string()?)
+}
 
 /// Open the given URI on this system.
 #[no_mangle]
@@ -27,8 +32,7 @@ pub unsafe extern "C" fn open_uri(
     o_cb: extern "C" fn(*mut c_void, *const FfiResult),
 ) {
     catch_unwind_cb(user_data, o_cb, || -> Result<(), Error> {
-        let uri = from_c_str(uri)?;
-        rust_open(uri)?;
+        rust_open(from_c_str(uri)?)?;
         o_cb(user_data, FFI_RESULT_OK);
         Ok(())
     })
